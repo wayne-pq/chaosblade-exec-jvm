@@ -152,6 +152,13 @@ public class CodeCacheFillingExecutor implements ActionExecutor, StoppableAction
 
             List<Object> objects = new ArrayList<Object>();
             DynamicJavaClassGenerator generator = new DynamicJavaClassGenerator();
+            List<MemoryPoolMXBean> memoryPoolMXBeans = ManagementFactory.getMemoryPoolMXBeans();
+            for (MemoryPoolMXBean memoryPoolMXBean : memoryPoolMXBeans) {
+                if ("Metaspace".equals(memoryPoolMXBean.getName())) {
+                    LOGGER.debug("beforeeeeeeeee ===== name: {} usage: {}", memoryPoolMXBean.getName(), memoryPoolMXBean.getUsage());
+                }
+            }
+
             for (int i = 0; i < bucketSize; i++) {
                 if (!flag.get()) {
                     LOGGER.info("Experiment stopped. Stop code cache object generating.");
@@ -171,6 +178,13 @@ public class CodeCacheFillingExecutor implements ActionExecutor, StoppableAction
             }
 
             LOGGER.info("Generated all objects for code cache filling.");
+
+            List<MemoryPoolMXBean> memoryPoolMXBeans1 = ManagementFactory.getMemoryPoolMXBeans();
+            for (MemoryPoolMXBean memoryPoolMXBean : memoryPoolMXBeans1) {
+                if ("Metaspace".equals(memoryPoolMXBean.getName())) {
+                    LOGGER.debug("afterrrrrrrrrrr ===== name: {} usage: {}", memoryPoolMXBean.getName(), memoryPoolMXBean.getUsage());
+                }
+            }
 
             try {
                 lock.await();
@@ -224,7 +238,8 @@ public class CodeCacheFillingExecutor implements ActionExecutor, StoppableAction
             int count = 0;
             long latestUsed = 0;
 
-            while(flag.get()) {
+            while (flag.get()) {
+                printMemoryPoolMXBeans();
                 MemoryUsage usage = getCodeCacheUsage();
 
                 if (LOGGER.isDebugEnabled()) {
@@ -253,6 +268,15 @@ public class CodeCacheFillingExecutor implements ActionExecutor, StoppableAction
                 try {
                     TimeUnit.SECONDS.sleep(1L);
                 } catch (InterruptedException ignored) {
+                }
+            }
+        }
+
+        private void printMemoryPoolMXBeans() {
+            List<MemoryPoolMXBean> memoryPoolMXBeans = ManagementFactory.getMemoryPoolMXBeans();
+            for (MemoryPoolMXBean memoryPoolMXBean : memoryPoolMXBeans) {
+                if ("Metaspace".equals(memoryPoolMXBean.getName())) {
+                    LOGGER.debug("===== name: {} usage: {}", memoryPoolMXBean.getName(), memoryPoolMXBean.getUsage());
                 }
             }
         }
